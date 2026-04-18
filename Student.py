@@ -17,8 +17,8 @@ conn.commit()
 # ---------- DB FUNCTIONS ----------
 
 def add_student_db(name, marks):
-    c.execute("INSERT OR REPLACE INTO students VALUES (?, ?)", (name, marks))
-    conn.commit()
+    with conn:
+        conn.execute("INSERT OR REPLACE INTO students VALUES (?, ?)", (name, marks))
 
 def get_all_students():
     c.execute("SELECT * FROM students")
@@ -78,7 +78,7 @@ if "students" not in st.session_state:
 # ---------- SIDEBAR ----------
 menu = st.sidebar.radio(
     "Navigation",
-    ["Dashboard", "Add Student", "Manage Students", "Analytics", "Reports", "Review", "Exit"]
+    ["Dashboard", "Add Student", "Manage Students", "Analytics", "Reports", "Review"]
 )
 
 # ---------- DASHBOARD ----------
@@ -208,8 +208,12 @@ elif menu == "Add Student":
                 add_student_db(name, marks)
                 st.session_state.students = get_all_students()
                 st.success("Added Successfully!")
+            elif not name.strip():
+                st.warning("Name cannot be empty")
+            elif not name.replace(" ", "").isalpha():
+                st.warning("Name must contain only letters")
             else:
-                st.warning("Name required")
+                add_student_db(name.strip(), marks)
 
 # ---------- MANAGE ----------
 elif menu == "Manage Students":
@@ -547,8 +551,3 @@ elif menu == "Review":
             **Teacher's Comment:**  
             {suggestion}
             """)
-
-# ---------- EXIT ----------
-elif menu == "Exit":
-    st.success("Thank you!")
-    st.stop()
